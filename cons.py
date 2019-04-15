@@ -3,13 +3,13 @@ from telebot import types
 import sqlite3
 import pyrebase
 config = {
-    "apiKey": "AIzaSyBW8sALdhQZBdx1imWvqtK1NLDizNtpwB0",
-    "authDomain": "clubevents-6d507.firebaseapp.com",
-    "databaseURL": "https://clubevents-6d507.firebaseio.com",
-    "projectId": "clubevents-6d507",
-    "storageBucket": "clubevents-6d507.appspot.com",
-    "messagingSenderId": "328916169448"
-}
+    "apiKey": "AIzaSyAe4hCoQXRM_Ve1Q-6hIeUbzD2LnN5V3jM",
+    "authDomain": "tsepochka-backend.firebaseapp.com",
+    "databaseURL": "https://tsepochka-backend.firebaseio.com",
+    "projectId": "tsepochka-backend",
+    "storageBucket": "tsepochka-backend.appspot.com",
+    "messagingSenderId": "510051547668"
+  }
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
 db = firebase.database()
@@ -59,14 +59,12 @@ def get_password(message):
 
 def handle_login(message):
     id = str(message.from_user.id)
-    try:
-        user_db[id]['creds'] = auth.sign_in_with_email_and_password(user_db[id]['email'], message.text)
-        user_db[id]['login'] = True
+    if user_db[id]['email'] == 'acm@nu.edu.kz' and message.text == '12345':
         markup = types.ReplyKeyboardMarkup(True, True)
         markup.row('Yes', 'No')
-        bot.send_message(message.from_user.id, "Welcome to my Club Events bot!\nWhould you like to send new message?\n",reply_markup=markup)
+        bot.send_message(message.from_user.id, "Welcome to my Club Events bot!\nWould you like to send new message?\n",reply_markup=markup)
         bot.register_next_step_handler(message, start_post)
-    except:
+    else:
         bot.send_message(message.from_user.id, "Login or password is incorrect. Try /login again")
 
 def start_post(message):
@@ -86,6 +84,7 @@ def get_title(message):
 def get_des(message):
     id = str(message.from_user.id)
     user_db[id]['post']['text'] = message.text
+    user_db[id]['post']['textHref'] = message.text
     tag = ""
     for k,v in tags.items():
         tag += str(k) + ": " + str(v) + "\n"
@@ -95,18 +94,23 @@ def get_des(message):
 def handle_post(message):
     tmp = message.text.split()
     id = str(message.from_user.id)
-    user_db[id]['post']['tags'] = [] 
-    for k in tmp:
-        try:
-            user_db[id]['post']['tags'].append(tags[k])
-        except:
-            continue
-    rep = ""
-    for k,v in user_db[id]['post'].items():
-        rep += str(k) + ": " + str(v) + "\n"
-    
-    db.child("users").child(user_db[id]['post'])
-    bot.send_message(message.from_user.id, rep +'\n\n\n' + "This is your post. Would you like to /edit it or /end session")
+    # user_db[id]['post']['tags'] = [] 
+    # for k in tmp:
+    #     try:
+    #         user_db[id]['post']['tags'].append(tags[k])
+    #     except:
+    #         continue
+    # rep = ""
+    # for k,v in user_db[id]['post'].items():
+    #     rep += str(k) + ": " + str(v) + "\n"
+    user_db[id]['post']['data'] = "June 12, 2021"
+    user_db[id]['post']['href'] = "\"\"https://vk.com/nuacm\"\""
+    user_db[id]['post']['source'] = "Acm"
+    user_db[id]['post']['img'] = "https://learning.acm.org/images/acm_rgb_grad_pos_diamond.png"
+    dat = db.child("news").child('Регулирования').get().val()
+    index = len(dat)
+    db.child("news").child('Регулирования').child(index).set(user_db[id]['post'])
+    bot.send_message(message.from_user.id,'\n\n\n' + "This is your post. Would you like to /edit it or /end session")
 
 @bot.message_handler(commands= ['edit'])
 def select_post(message):
